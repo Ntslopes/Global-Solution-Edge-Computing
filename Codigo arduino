@@ -1,0 +1,145 @@
+
+
+#include <LiquidCrystal_I2C.h>
+
+//LCD I2C
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+int painelSolar = A1;
+int sensorTemp = A2;
+
+int ledsolar = 10;
+int ledamarelo = 9;
+int ledvermelho = 8;
+int ledverde = 6;
+int buzzer = 7;
+
+void setup() {
+
+  pinMode(ledsolar, OUTPUT);
+  pinMode(ledamarelo, OUTPUT);
+  pinMode(ledvermelho, OUTPUT);
+  pinMode(ledverde, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+
+  //Inicializa LCD
+  lcd.init();
+
+  //Liga luz do LCD
+  lcd.backlight();
+}
+
+void loop() {
+
+  //PAINEL SOLAR 
+  int valorBruto = analogRead(painelSolar);
+  int porcentagem = map(valorBruto, 0, 1023, 0, 100);
+
+  //SENSOR TEMPERATURA 
+  int leituraTemp = analogRead(sensorTemp);
+
+  float tensao = leituraTemp * (5.0 / 1023.0);
+
+  float temperatura = (tensao - 0.5) * 100;
+
+
+  if(temperatura > 32){
+
+    digitalWrite(ledvermelho, HIGH);
+    digitalWrite(ledamarelo, LOW);
+    digitalWrite(ledverde, LOW);
+
+    digitalWrite(buzzer, HIGH);
+
+    // painel solar desligado
+    digitalWrite(ledsolar, LOW);
+
+    lcd.clear();
+
+    lcd.setCursor(0, 0);
+    lcd.print("TEMP CRITICA");
+
+    lcd.setCursor(0, 1);
+    lcd.print("REFRIGERANDO");
+
+    delay(500);
+  }
+
+
+  else if(temperatura > 27 && temperatura < 32){
+
+    digitalWrite(ledvermelho, LOW);
+    digitalWrite(ledamarelo, HIGH);
+    digitalWrite(ledverde, LOW);
+
+    digitalWrite(buzzer, LOW);
+
+    lcd.clear();
+
+    lcd.setCursor(0, 0);
+    lcd.print("TEMP ELEVADA");
+
+    lcd.setCursor(0, 1);
+    lcd.print("ATENCAO");
+
+    delay(500);
+  }
+
+  else{
+
+    digitalWrite(ledvermelho, LOW);
+    digitalWrite(ledamarelo, LOW);
+    digitalWrite(ledverde, HIGH);
+
+    digitalWrite(buzzer, LOW);
+
+    lcd.clear();
+
+    lcd.setCursor(0, 0);
+    lcd.print("TEMP NORMAL");
+
+    lcd.setCursor(0, 1);
+    lcd.print("RECOMENDADA");
+
+    delay(500);
+  }
+
+  // painel solar só liga se:
+
+  if(porcentagem > 50 && temperatura < 85){
+
+    digitalWrite(ledsolar, HIGH);
+
+    lcd.clear();
+
+    lcd.setCursor(0, 0);
+    lcd.print("PAINEL SOLAR");
+
+    lcd.setCursor(0, 1);
+    lcd.print("LIGADO");
+  }
+
+  else{
+
+    digitalWrite(ledsolar, LOW);
+
+    lcd.clear();
+
+    lcd.setCursor(0, 0);
+    lcd.print("PAINEL SOLAR");
+
+    lcd.setCursor(0, 1);
+
+    // temperatura critica do painel
+    if(temperatura >= 85){
+      lcd.print("CRITICO");
+    }
+
+    // pouca luminosidade
+    else{
+      lcd.print("DESLIGADO");
+    }
+  }
+
+  delay(1000);
+}
