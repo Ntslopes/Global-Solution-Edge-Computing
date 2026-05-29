@@ -1,179 +1,148 @@
+# ☀️ SolarShield — Simulador de Proteção Contra Tempestades Solares
 
-# ☀️ Sistema de Monitoramento de Painel Solar com Arduino
-
-<div align="center">
-
-![Arduino](https://img.shields.io/badge/Arduino-00979D?style=for-the-badge&logo=arduino&logoColor=white)
-![C++](https://img.shields.io/badge/C%2B%2B-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Funcional-brightgreen?style=for-the-badge)
-
-> 🔋 Projeto embarcado para monitoramento inteligente de temperatura e luminosidade em painéis solares, com alertas visuais, sonoros e exibição em display LCD I2C.
-
-</div>
+> **Protótipo Arduino de monitoramento térmico e energético inspirado na proteção de data centers contra anomalias solares**
 
 ---
 
-## 📋 Índice
+## 🌌 Contexto do Projeto
 
-- [Sobre o Projeto](#-sobre-o-projeto)
-- [Funcionalidades](#-funcionalidades)
-- [Hardware Necessário](#-hardware-necessário)
-- [Pinagem](#-pinagem)
-- [Lógica de Funcionamento](#-lógica-de-funcionamento)
-- [Display LCD — Estados Possíveis](#-display-lcd--estados-possíveis)
-- [Como Usar](#-como-usar)
-- [Dependências](#-dependências)
-- [Participantes](#-participantes)
+Tempestades solares (ejeções de massa coronal) podem induzir **correntes parasitas na rede elétrica**, causando superaquecimento de equipamentos, danos a transformadores e UPS, e até blecautes em data centers — gerando prejuízos de milhões de dólares por hora.
 
----
+Este projeto simula, em escala reduzida com Arduino, o comportamento de um sistema de monitoramento e resposta automática a esse tipo de evento:
 
-## 🧠 Sobre o Projeto
-
-Este projeto simula um sistema de controle e monitoramento para painéis solares fotovoltaicos utilizando um **Arduino**. Ele lê dados de um **sensor de luminosidade** (simulando o painel solar) e de um **sensor de temperatura (LM35)**, tomando decisões automáticas sobre o estado do sistema e comunicando ao usuário por meio de:
-
-- 💡 **LEDs coloridos** (verde, amarelo e vermelho)
-- 🔔 **Buzzer de alerta**
-- 📺 **Display LCD I2C 16x2**
+- 🌡️ O **sensor de temperatura** representa o aquecimento anômalo que uma tempestade solar pode causar na infraestrutura
+- ☀️ O **painel solar (LDR)** representa a disponibilidade de energia renovável no momento do evento
+- 💡 Os **LEDs e buzzer** representam os alertas automáticos acionados pelo sistema
+- 📟 O **display LCD** representa o painel de status do data center em tempo real
 
 ---
 
-## ✅ Funcionalidades
+## 🛠️ Hardware Utilizado
 
-| Funcionalidade | Descrição |
+| Componente | Quantidade | Pino Arduino |
+|---|---|---|
+| Arduino Uno | 1 | — |
+| Display LCD 16x2 (I2C) | 1 | SDA/SCL |
+| Sensor de temperatura TMP36 | 1 | A2 |
+| LDR (fotoresistor) | 1 | A1 |
+| LED vermelho | 1 | 8 |
+| LED amarelo | 1 | 9 |
+| LED verde | 1 | 6 |
+| LED azul (painel solar) | 1 | 10 |
+| Buzzer | 1 | 7 |
+| Resistores 220Ω | 4 | — |
+
+---
+
+## ⚙️ Como Funciona
+
+### 🌡️ Monitoramento de Temperatura (Simulação da Tempestade Solar)
+
+O sensor TMP36 lê a temperatura ambiente e classifica em três estados:
+
+```
+temperatura > 32°C   →  🔴 TEMP CRÍTICA   — LED vermelho + buzzer + painel desligado
+27°C < temp < 32°C   →  🟡 TEMP ELEVADA   — LED amarelo + atenção
+temperatura ≤ 27°C   →  🟢 TEMP NORMAL    — LED verde + operação recomendada
+```
+
+> 💡 Simule uma "tempestade solar" aquecendo o sensor com os dedos ou um sopro quente — o sistema responde em tempo real.
+
+### ☀️ Controle do Painel Solar
+
+O painel só entra em operação quando **duas condições são atendidas simultaneamente**:
+
+```
+luminosidade > 50%   E   temperatura < 85°C   →   PAINEL LIGADO
+caso contrário                                →   PAINEL DESLIGADO / CRÍTICO
+```
+
+Isso simula a lógica de um data center que só ativa fontes de energia renovável quando as condições ambientais são seguras.
+
+### 📟 Display LCD — Painel de Status
+
+O LCD exibe o estado atual do sistema em tempo real, alternando entre as mensagens de temperatura e status do painel solar.
+
+---
+
+## 📊 Diagrama de Estados
+
+```
+                    ┌─────────────────────────────┐
+                    │       LEITURA DOS SENSORES      │
+                    │  Temperatura (A2) + LDR (A1)   │
+                    └──────────────┬──────────────┘
+                                   │
+               ┌───────────────────┼───────────────────┐
+               ▼                   ▼                   ▼
+        temp > 32°C          27 < temp < 32        temp ≤ 27°C
+        🔴 CRÍTICA            🟡 ELEVADA             🟢 NORMAL
+        LED vermelho          LED amarelo            LED verde
+        Buzzer ON             Buzzer OFF             Buzzer OFF
+        Painel OFF            —                      —
+               │                   │                   │
+               └───────────────────┼───────────────────┘
+                                   │
+                    ┌──────────────▼──────────────┐
+                    │    luminosidade > 50%?        │
+                    │    temperatura < 85°C?        │
+                    └──────────────┬──────────────┘
+                          ┌────────┴────────┐
+                          ▼                 ▼
+                    SIM → PAINEL         NÃO → PAINEL
+                        LIGADO              DESLIGADO
+```
+
+---
+
+## 🚀 Como Reproduzir
+
+1. **Monte o circuito** conforme a tabela de pinos acima
+2. **Instale a biblioteca** `LiquidCrystal_I2C` na Arduino IDE
+   - Sketch → Incluir Biblioteca → Gerenciar Bibliotecas → buscar `LiquidCrystal I2C`
+3. **Carregue o código** `solarshield.ino` na placa
+4. **Abra o Monitor Serial** (opcional) para debug
+5. **Teste o sistema:**
+   - Cubra o LDR → painel desliga por baixa luminosidade
+   - Aqueça o TMP36 → sistema entra em modo crítico com buzzer
+   - Ilumine o LDR com luminosidade > 50% e temperatura normal → painel liga
+
+---
+
+## 🔗 Conexão com a Proposta Real
+
+Este protótipo é a prova de conceito física de uma solução maior:
+
+| Protótipo Arduino | Sistema Real |
 |---|---|
-| 🌡️ Leitura de temperatura | Via sensor analógico LM35 (pino A2) |
-| ☀️ Leitura de luminosidade | Simulando saída do painel solar (pino A1) |
-| 🟢 LED Verde | Temperatura normal (≤ 27°C) |
-| 🟡 LED Amarelo | Temperatura elevada (27°C < T < 32°C) |
-| 🔴 LED Vermelho + Buzzer | Temperatura crítica (> 32°C) — painel desligado |
-| 💡 LED Painel Solar | Liga quando luminosidade > 50% e temperatura < 85°C |
-| 📺 LCD I2C | Exibe status em tempo real |
+| Sensor TMP36 | Satélites DSCOVR + SWPC monitorando vento solar |
+| LDR | Medidores de disponibilidade de energia renovável |
+| LEDs + buzzer | Alertas para operadores + sistemas EPMS/DCIM |
+| LCD | Dashboard de monitoramento do data center |
+| Lógica de desligar o painel | Desconexão seletiva da rede + migração de workloads de IA |
+
+A ideia central é a mesma: **agir antes do dano, não depois.**
 
 ---
 
-## 🔧 Hardware Necessário
-
-- 1x Arduino Uno (ou compatível)
-- 1x Display LCD I2C 16x2 (endereço `0x27`)
-- 1x Sensor de temperatura **LM35** (ou potenciômetro simulando)
-- 1x Sensor de luminosidade / LDR (ou potenciômetro simulando)
-- 1x Buzzer ativo
-- 1x LED Vermelho
-- 1x LED Amarelo
-- 1x LED Verde
-- 1x LED Azul/Branco (painel solar)
-- Resistores (220Ω para cada LED)
-- Protoboard e jumpers
-
----
-
-## 🔌 Pinagem
-
-```
-Arduino          Componente
-─────────────────────────────────────
-A1           →   Sensor Painel Solar (luminosidade)
-A2           →   Sensor de Temperatura (LM35)
-D6           →   LED Verde
-D7           →   Buzzer
-D8           →   LED Vermelho
-D9           →   LED Amarelo
-D10          →   LED Painel Solar
-SDA (A4)     →   LCD I2C SDA
-SCL (A5)     →   LCD I2C SCL
-```
-
----
-
-## ⚙️ Lógica de Funcionamento
-
-### 🌡️ Temperatura (LM35)
-
-A tensão lida no pino analógico é convertida para temperatura com a fórmula:
-
-```
-tensão    = leitura × (5.0 / 1023.0)
-temperatura = (tensão - 0.5) × 100
-```
-
-| Faixa | Estado | LED | Buzzer |
-|---|---|---|---|
-| T ≤ 27°C | Normal | 🟢 Verde | OFF |
-| 27°C < T < 32°C | Elevada | 🟡 Amarelo | OFF |
-| T > 32°C | **Crítica** | 🔴 Vermelho | **ON** |
-
-> ⚠️ Com temperatura crítica, o painel solar é **forçadamente desligado**.
-
-### ☀️ Painel Solar
-
-O valor bruto do sensor é mapeado para uma **porcentagem (0–100%)**.
-
-| Condição | Estado do Painel |
-|---|---|
-| Luminosidade > 50% **e** Temperatura < 85°C | ✅ LIGADO |
-| Luminosidade ≤ 50% | ❌ DESLIGADO |
-| Temperatura ≥ 85°C | 🚨 CRÍTICO |
-
----
-
-## 📺 Display LCD — Estados Possíveis
-
-```
-┌────────────────┐     ┌────────────────┐     ┌────────────────┐
-│  TEMP CRITICA  │     │  TEMP ELEVADA  │     │  TEMP NORMAL   │
-│  REFRIGERANDO  │     │    ATENCAO     │     │  RECOMENDADA   │
-└────────────────┘     └────────────────┘     └────────────────┘
-
-┌────────────────┐     ┌────────────────┐     ┌────────────────┐
-│  PAINEL SOLAR  │     │  PAINEL SOLAR  │     │  PAINEL SOLAR  │
-│     LIGADO     │     │   DESLIGADO    │     │    CRITICO     │
-└────────────────┘     └────────────────┘     └────────────────┘
-```
-
----
-
-## 🚀 Como Usar
-
-1. **Clone ou baixe** este repositório.
-2. Abra o arquivo `.ino` na **Arduino IDE**.
-3. Instale a biblioteca `LiquidCrystal_I2C` (via *Library Manager* ou manualmente).
-4. Monte o circuito conforme a [pinagem](#-pinagem).
-5. Selecione a placa correta (ex: *Arduino Uno*) e a porta COM.
-6. Faça o **upload** do código.
-7. Abra o **Monitor Serial** se quiser depurar (opcional).
-
----
-
-## 📦 Dependências
-
-```cpp
-#include <LiquidCrystal_I2C.h>
-```
-
-- **LiquidCrystal_I2C** — disponível no Library Manager da Arduino IDE  
-  🔗 [https://github.com/johnrickman/LiquidCrystal_I2C](https://github.com/johnrickman/LiquidCrystal_I2C)
-
----
-
-## 👥 Participantes
-
-<div align="center">
+## 👥 Equipe
 
 | Nome | RA |
 |---|---|
-| 👩‍💻 Esther dos Santos de Almeida Tozzo | `570860` |
-| 👨‍💻 Felipe de Oliveira Zimmermann | `570863` |
-| 👩‍💻 Izabela Pordeus de Almeida | `570316` |
-| 👨‍💻 João Victor Santos Souza | `569949` |
-| 👨‍💻 Matheus Lopes Lima | `571458` |
+| Esther dos Santos de Almeida Tozzo | 570860 |
+| Felipe de Oliveira Zimmermann | 570863 |
+| Izabela Pordeus de Almeida | 570316 |
+| João Victor Santos Souza | 569949 |
+| Matheus Lopes Lima | 571458 |
 
-</div>
+---
+
+## 📄 Licença
+
+Projeto acadêmico de livre uso para fins educacionais.
 
 ---
 
 <div align="center">
-
-Feito com ☀️ e muito ☕ pelo grupo.
-
+  <sub>Feito com ☀️ e muito Arduino</sub>
 </div>
