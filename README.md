@@ -1,4 +1,4 @@
-# Global-Solution-Edge-Computing
+
 # ☀️ Sistema de Monitoramento de Painel Solar com Arduino
 
 <div align="center">
