@@ -166,7 +166,6 @@ O valor bruto do sensor é mapeado para uma **porcentagem (0–100%)**.
 | 👨‍💻 Felipe de Oliveira Zimmermann | `570863` |
 | 👩‍💻 Izabela Pordeus de Almeida | `570316` |
 | 👨‍💻 João Victor Santos Souza | `569949` |
-| 👨‍💻 Leonardo Henrique Basseti | `574039` |
 | 👨‍💻 Matheus Lopes Lima | `571458` |
 
 </div>
